@@ -54,11 +54,22 @@ export async function analyzeSong(title) {
   }
 
   const data = await response.json()
-  const text = data.content?.[0]?.text ?? ''
+  const raw = data.content?.[0]?.text ?? ''
+
+  // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+  const text = raw
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/, '')
+    .trim()
+
+  // Extract first JSON object or array in case there's surrounding text
+  const jsonMatch = text.match(/(\{[\s\S]*\}|\[[\s\S]*\])/)
+  const jsonText = jsonMatch ? jsonMatch[0] : text
 
   try {
-    return JSON.parse(text)
+    return JSON.parse(jsonText)
   } catch {
+    console.error('Raw Claude response:', raw)
     throw new Error('Réponse Claude non parseable')
   }
 }
