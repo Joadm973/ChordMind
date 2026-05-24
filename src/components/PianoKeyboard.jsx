@@ -6,60 +6,90 @@ const WHITE_KEYS = [
 
 // black key positions: index of the white key to the LEFT, plus note name
 const BLACK_KEYS = [
-  { leftWhite: 0, note: 'C#3' },
-  { leftWhite: 1, note: 'D#3' },
-  { leftWhite: 3, note: 'F#3' },
-  { leftWhite: 4, note: 'G#3' },
-  { leftWhite: 5, note: 'A#3' },
-  { leftWhite: 7, note: 'C#4' },
-  { leftWhite: 8, note: 'D#4' },
+  { leftWhite: 0,  note: 'C#3' },
+  { leftWhite: 1,  note: 'D#3' },
+  { leftWhite: 3,  note: 'F#3' },
+  { leftWhite: 4,  note: 'G#3' },
+  { leftWhite: 5,  note: 'A#3' },
+  { leftWhite: 7,  note: 'C#4' },
+  { leftWhite: 8,  note: 'D#4' },
   { leftWhite: 10, note: 'F#4' },
   { leftWhite: 11, note: 'G#4' },
   { leftWhite: 12, note: 'A#4' }
 ]
 
-// Normalise note names so "Eb" matches "D#", "Bb" matches "A#", etc.
+// Enharmonic equivalents → canonical sharp form
 const ENHARMONIC = {
-  'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#',
-  'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B',
-  'C#': 'C#', 'D#': 'D#', 'F#': 'F#', 'G#': 'G#', 'A#': 'A#'
+  'Db':'C#','Eb':'D#','Fb':'E','Gb':'F#',
+  'Ab':'G#','Bb':'A#','Cb':'B',
+  'C#':'C#','D#':'D#','F#':'F#','G#':'G#','A#':'A#'
 }
 
-function normalizeNote(note) {
-  // note may be like "C4", "F#3", "Bb4", "E" (no octave)
-  const upper = note.trim()
-  const match = upper.match(/^([A-Ga-g][b#]?)(\d?)$/)
-  if (!match) return upper
-  const [, pitch, octave] = match
-  const canonical = ENHARMONIC[pitch] ?? pitch.charAt(0).toUpperCase() + pitch.slice(1)
+// French solfège → English
+const SOLFEGE = {
+  'do':'C','ré':'D','re':'D','mi':'E','fa':'F',
+  'sol':'G','la':'A','si':'B','ti':'B'
+}
+
+/** Normalize any note string to canonical form (e.g. "Bb4" → "A#4", "la" → "A") */
+function normalizeNote(raw) {
+  const s = raw.trim()
+
+  // Try solfège (case-insensitive, with optional accidental + optional octave)
+  const solfMatch = s.match(/^(do|ré|re|mi|fa|sol|la|si|ti)([b#]?)(\d?)$/i)
+  if (solfMatch) {
+    const base  = SOLFEGE[solfMatch[1].toLowerCase()]
+    const acc   = solfMatch[2]
+    const oct   = solfMatch[3]
+    const pitch = acc ? (ENHARMONIC[base + acc] ?? base + acc) : base
+    return oct ? `${pitch}${oct}` : pitch
+  }
+
+  // Standard letter notation: C, C#3, Bb4, etc.
+  const match = s.match(/^([A-Ga-g][b#]?)(\d?)$/)
+  if (!match) return s
+  const [, rawPitch, octave] = match
+  const pitch = rawPitch.charAt(0).toUpperCase() + rawPitch.slice(1)
+  const canonical = ENHARMONIC[pitch] ?? pitch
   return octave ? `${canonical}${octave}` : canonical
 }
 
-function activeSet(chordDetail) {
+/** Strip octave digit from a key name ("C#3" → "C#", "A4" → "A") */
+const stripOctave = (key) => key.replace(/\d+$/, '')
+
+/** Build the set of keyboard key names that belong to the active chord */
+function buildActiveSet(chordDetail) {
   if (!chordDetail) return new Set()
   const notes = chordDetail.notes ?? []
   const result = new Set()
-  notes.forEach((n) => {
-    const norm = normalizeNote(n)
-    // If no octave given, match both octaves
-    if (!/\d$/.test(norm)) {
-      WHITE_KEYS.forEach((k) => { if (k.startsWith(norm)) result.add(k) })
-      BLACK_KEYS.forEach((k) => { if (k.note.startsWith(norm)) result.add(k.note) })
+
+  notes.forEach((raw) => {
+    const norm = normalizeNote(raw)
+    const hasOctave = /\d$/.test(norm)
+
+    if (hasOctave) {
+      // Exact match: only add if key exists in our range
+      if (WHITE_KEYS.includes(norm) || BLACK_KEYS.some(k => k.note === norm)) {
+        result.add(norm)
+      }
     } else {
-      result.add(norm)
+      // No octave: match all keys whose letter part equals norm exactly
+      WHITE_KEYS.forEach(k => { if (stripOctave(k) === norm) result.add(k) })
+      BLACK_KEYS.forEach(k => { if (stripOctave(k.note) === norm) result.add(k.note) })
     }
   })
+
   return result
 }
 
-const WHITE_W = 36
-const WHITE_H = 120
-const BLACK_W = 22
-const BLACK_H = 74
-const TOTAL_W = WHITE_KEYS.length * WHITE_W
+const WHITE_W  = 36
+const WHITE_H  = 120
+const BLACK_W  = 22
+const BLACK_H  = 74
+const TOTAL_W  = WHITE_KEYS.length * WHITE_W
 
 export default function PianoKeyboard({ activeChordDetail }) {
-  const active = activeSet(activeChordDetail)
+  const active = buildActiveSet(activeChordDetail)
 
   return (
     <div className="overflow-x-auto">
@@ -74,56 +104,65 @@ export default function PianoKeyboard({ activeChordDetail }) {
         {WHITE_KEYS.map((note, i) => {
           const isActive = active.has(note)
           return (
-            <rect
-              key={note}
-              x={i * WHITE_W}
-              y={0}
-              width={WHITE_W - 1}
-              height={WHITE_H}
-              rx={3}
-              fill={isActive ? '#6366f1' : 'white'}
-              stroke="#94a3b8"
-              strokeWidth={1}
-            />
+            <g key={note}>
+              <rect
+                x={i * WHITE_W}
+                y={0}
+                width={WHITE_W - 1}
+                height={WHITE_H}
+                rx={3}
+                fill={isActive ? '#6366f1' : 'white'}
+                stroke="#94a3b8"
+                strokeWidth={1}
+              />
+              {/* Label: always show C notes, always show active notes */}
+              {(stripOctave(note) === 'C' || isActive) && (
+                <text
+                  x={i * WHITE_W + WHITE_W / 2}
+                  y={WHITE_H - 8}
+                  textAnchor="middle"
+                  fontSize={9}
+                  fill={isActive ? 'white' : '#94a3b8'}
+                  fontFamily="monospace"
+                  style={{ pointerEvents: 'none', userSelect: 'none' }}
+                >
+                  {note}
+                </text>
+              )}
+            </g>
           )
         })}
 
-        {/* Note labels on white keys */}
-        {WHITE_KEYS.map((note, i) => {
-          const isActive = active.has(note)
-          const label = note.replace(/\d/, '')
-          const isC = label === 'C'
-          return (isC || isActive) ? (
-            <text
-              key={`label-${note}`}
-              x={i * WHITE_W + WHITE_W / 2}
-              y={WHITE_H - 8}
-              textAnchor="middle"
-              fontSize={10}
-              fill={isActive ? 'white' : '#94a3b8'}
-              fontFamily="monospace"
-            >
-              {note}
-            </text>
-          ) : null
-        })}
-
-        {/* Black keys */}
+        {/* Black keys (rendered on top) */}
         {BLACK_KEYS.map(({ leftWhite, note }) => {
           const isActive = active.has(note)
           const x = leftWhite * WHITE_W + WHITE_W - BLACK_W / 2
           return (
-            <rect
-              key={note}
-              x={x}
-              y={0}
-              width={BLACK_W}
-              height={BLACK_H}
-              rx={3}
-              fill={isActive ? '#6366f1' : '#1e293b'}
-              stroke="#0f172a"
-              strokeWidth={1}
-            />
+            <g key={note}>
+              <rect
+                x={x}
+                y={0}
+                width={BLACK_W}
+                height={BLACK_H}
+                rx={3}
+                fill={isActive ? '#6366f1' : '#1e293b'}
+                stroke="#0f172a"
+                strokeWidth={1}
+              />
+              {isActive && (
+                <text
+                  x={x + BLACK_W / 2}
+                  y={BLACK_H - 6}
+                  textAnchor="middle"
+                  fontSize={7}
+                  fill="white"
+                  fontFamily="monospace"
+                  style={{ pointerEvents: 'none', userSelect: 'none' }}
+                >
+                  {note}
+                </text>
+              )}
+            </g>
           )
         })}
       </svg>

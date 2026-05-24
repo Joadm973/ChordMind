@@ -5,6 +5,30 @@ import PianoKeyboard from './components/PianoKeyboard'
 import Quiz from './components/Quiz'
 import { useSongAnalysis } from './hooks/useSongAnalysis'
 
+/**
+ * Find chord detail with graceful fallback:
+ * 1. Exact key match
+ * 2. Case-insensitive match
+ * 3. The chord name is contained in a key (e.g. "Am" matches "Am7")
+ * 4. A key is contained in the chord name
+ */
+function findChordDetail(chordsDetail, chordName) {
+  if (!chordsDetail || !chordName) return null
+  if (chordsDetail[chordName]) return chordsDetail[chordName]
+  const keys = Object.keys(chordsDetail)
+  const lower = chordName.toLowerCase()
+  // Case-insensitive exact
+  const exact = keys.find(k => k.toLowerCase() === lower)
+  if (exact) return chordsDetail[exact]
+  // Chord name starts with key (e.g. "Am" in "Am7")
+  const startsWith = keys.find(k => lower.startsWith(k.toLowerCase()))
+  if (startsWith) return chordsDetail[startsWith]
+  // Key starts with chord name
+  const keyStarts = keys.find(k => k.toLowerCase().startsWith(lower))
+  if (keyStarts) return chordsDetail[keyStarts]
+  return null
+}
+
 export default function App() {
   const { result, loading, error, search } = useSongAnalysis()
   const [selectedChord, setSelectedChord] = useState(null)
@@ -13,7 +37,7 @@ export default function App() {
     setSelectedChord((prev) => (prev === chord ? null : chord))
   }
 
-  const activeChordDetail = result?.chords_detail?.[selectedChord] ?? null
+  const activeChordDetail = findChordDetail(result?.chords_detail, selectedChord)
 
   return (
     <div className="min-h-screen bg-slate-900 text-white">
