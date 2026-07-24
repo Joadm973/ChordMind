@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-export default function Quiz({ questions }) {
+export default function Quiz({ questions, onComplete }) {
   const [current, setCurrent] = useState(0)
   const [selected, setSelected] = useState(null)
   const [score, setScore] = useState(0)
   const [done, setDone] = useState(false)
+
+  useEffect(() => {
+    if (done) onComplete?.(score, questions.length)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done])
 
   if (!questions || questions.length === 0) return null
 
