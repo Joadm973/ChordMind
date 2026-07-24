@@ -4,6 +4,7 @@ import SongStructure from './components/SongStructure'
 import PianoKeyboard from './components/PianoKeyboard'
 import Quiz from './components/Quiz'
 import Learn from './components/learn/Learn'
+import Logo from './components/Logo'
 import { useSongAnalysis } from './hooks/useSongAnalysis'
 
 /**
@@ -42,35 +43,42 @@ export default function App() {
   const activeChordDetail = findChordDetail(result?.chords_detail, selectedChord)
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
+    <div className="min-h-screen bg-slate-950 bg-radial-glow text-white">
       {/* Header */}
-      <header className="border-b border-slate-800 py-5 px-4">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <h1 className="text-center text-2xl font-extrabold tracking-tight text-indigo-400">
-            🎹 ChordMind
-          </h1>
+      <header className="sticky top-0 z-20 border-b border-white/5 bg-slate-950/80 backdrop-blur-md">
+        <div className="max-w-3xl mx-auto px-4 py-5 space-y-4">
+          <div className="flex items-center justify-center gap-2.5">
+            <Logo size={30} />
+            <h1 className="font-display text-xl font-bold tracking-tight text-white">
+              Chord<span className="text-indigo-400">Mind</span>
+            </h1>
+          </div>
 
-          <div className="flex justify-center gap-2">
-            <button
-              onClick={() => setActiveTab('analyze')}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeTab === 'analyze'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
-              }`}
-            >
-              Analyser
-            </button>
-            <button
-              onClick={() => setActiveTab('learn')}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                activeTab === 'learn'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
-              }`}
-            >
-              Apprendre
-            </button>
+          <div className="flex justify-center">
+            <div className="relative flex bg-slate-900/70 border border-white/5 rounded-full p-1">
+              <span
+                aria-hidden="true"
+                className={`absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 shadow-lg shadow-indigo-950/50 transition-transform duration-300 ease-out ${
+                  activeTab === 'learn' ? 'translate-x-[calc(100%+4px)]' : 'translate-x-0'
+                }`}
+              />
+              <button
+                onClick={() => setActiveTab('analyze')}
+                className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
+                  activeTab === 'analyze' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Analyser
+              </button>
+              <button
+                onClick={() => setActiveTab('learn')}
+                className={`relative z-10 px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
+                  activeTab === 'learn' ? 'text-white' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Apprendre
+              </button>
+            </div>
           </div>
 
           {activeTab === 'analyze' && <SearchBar onSearch={search} loading={loading} />}
@@ -92,7 +100,7 @@ export default function App() {
 
             {/* Error */}
             {error && !loading && (
-              <div className="bg-red-900/30 border border-red-700 rounded-xl p-4 text-red-300 text-sm">
+              <div className="bg-red-950/40 border border-red-800/50 rounded-2xl p-4 text-red-300 text-sm shadow-lg shadow-black/20">
                 {error}
               </div>
             )}
@@ -114,7 +122,7 @@ export default function App() {
                       ? `Accord ${selectedChord} sur le clavier`
                       : 'Clavier — cliquez un accord pour le visualiser'}
                   </h3>
-                  <div className="bg-slate-800 border border-slate-700 rounded-xl p-4">
+                  <div className="bg-slate-900/50 border border-white/5 rounded-2xl p-4 shadow-lg shadow-black/10 backdrop-blur-sm">
                     <PianoKeyboard activeChordDetail={activeChordDetail} />
                   </div>
                 </section>
@@ -126,14 +134,18 @@ export default function App() {
 
             {/* Empty state */}
             {!result && !loading && !error && (
-              <div className="text-center py-20 text-slate-600 space-y-2">
-                <p className="text-5xl">🎵</p>
-                <p className="text-lg font-medium text-slate-500">
-                  Entrez un titre de morceau pour analyser ses accords
-                </p>
-                <p className="text-sm text-slate-600">
-                  Ex : Für Elise, Let It Be, Bohemian Rhapsody…
-                </p>
+              <div className="text-center py-20 space-y-4">
+                <div className="mx-auto w-16 h-16 rounded-2xl bg-slate-900/60 border border-white/5 flex items-center justify-center shadow-lg shadow-black/10">
+                  <Logo size={30} />
+                </div>
+                <div className="space-y-1.5">
+                  <p className="text-lg font-medium text-slate-300 font-display">
+                    Entrez un titre de morceau pour analyser ses accords
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    Ex : Für Elise, Let It Be, Bohemian Rhapsody…
+                  </p>
+                </div>
               </div>
             )}
           </>
