@@ -88,8 +88,9 @@ const BLACK_W  = 22
 const BLACK_H  = 74
 const TOTAL_W  = WHITE_KEYS.length * WHITE_W
 
-export default function PianoKeyboard({ activeChordDetail }) {
+export default function PianoKeyboard({ activeChordDetail, changedNote }) {
   const active = buildActiveSet(activeChordDetail)
+  const changed = changedNote ? buildActiveSet({ notes: [changedNote] }) : new Set()
 
   return (
     <div className="overflow-x-auto">
@@ -102,7 +103,8 @@ export default function PianoKeyboard({ activeChordDetail }) {
       >
         {/* White keys */}
         {WHITE_KEYS.map((note, i) => {
-          const isActive = active.has(note)
+          const isChanged = changed.has(note)
+          const isActive = active.has(note) || isChanged
           return (
             <g key={note}>
               <rect
@@ -111,7 +113,7 @@ export default function PianoKeyboard({ activeChordDetail }) {
                 width={WHITE_W - 1}
                 height={WHITE_H}
                 rx={3}
-                fill={isActive ? '#6366f1' : 'white'}
+                fill={isChanged ? '#f59e0b' : isActive ? '#6366f1' : 'white'}
                 stroke="#94a3b8"
                 strokeWidth={1}
               />
@@ -135,7 +137,8 @@ export default function PianoKeyboard({ activeChordDetail }) {
 
         {/* Black keys (rendered on top) */}
         {BLACK_KEYS.map(({ leftWhite, note }) => {
-          const isActive = active.has(note)
+          const isChanged = changed.has(note)
+          const isActive = active.has(note) || isChanged
           const x = leftWhite * WHITE_W + WHITE_W - BLACK_W / 2
           return (
             <g key={note}>
@@ -145,7 +148,7 @@ export default function PianoKeyboard({ activeChordDetail }) {
                 width={BLACK_W}
                 height={BLACK_H}
                 rx={3}
-                fill={isActive ? '#6366f1' : '#1e293b'}
+                fill={isChanged ? '#f59e0b' : isActive ? '#6366f1' : '#1e293b'}
                 stroke="#0f172a"
                 strokeWidth={1}
               />
