@@ -4,7 +4,7 @@ export default function SongStructure({ result, selectedChord, onSelectChord, ch
   return (
     <section className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-white">{result.title}</h2>
+        <h2 className="text-2xl font-display font-bold text-white tracking-tight">{result.title}</h2>
         <p className="text-slate-400 text-sm mt-1">
           {result.artist} · Tonalité : <span className="text-indigo-400 font-semibold">{result.key}</span>
         </p>
@@ -12,7 +12,10 @@ export default function SongStructure({ result, selectedChord, onSelectChord, ch
 
       <div className="space-y-4">
         {result.structure.map((section, i) => (
-          <div key={i} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+          <div
+            key={i}
+            className="bg-slate-900/50 rounded-2xl p-4 border border-white/5 shadow-lg shadow-black/10 backdrop-blur-sm hover:border-white/10 transition-colors"
+          >
             <h3 className="text-indigo-300 font-semibold text-sm uppercase tracking-wide mb-2">
               {section.section}
             </h3>
@@ -21,10 +24,10 @@ export default function SongStructure({ result, selectedChord, onSelectChord, ch
                 <button
                   key={j}
                   onClick={() => onSelectChord(chord)}
-                  className={`px-3 py-1 rounded-lg text-sm font-mono font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg text-sm font-mono font-bold transition-all active:scale-95 ${
                     selectedChord === chord
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-slate-700 text-slate-200 hover:bg-slate-600'
+                      ? 'bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-md shadow-indigo-950/50'
+                      : 'bg-slate-800/80 text-slate-200 hover:bg-slate-700'
                   }`}
                 >
                   {chord}
@@ -51,7 +54,7 @@ export default function SongStructure({ result, selectedChord, onSelectChord, ch
             ))}
           </div>
           {selectedChord && chordsDetail[selectedChord] && (
-            <div className="mt-4 p-4 bg-indigo-900/30 border border-indigo-700 rounded-xl">
+            <div className="mt-4 p-4 bg-indigo-950/40 border border-indigo-800/40 rounded-2xl shadow-lg shadow-black/10">
               <p className="text-indigo-200 text-sm leading-relaxed">
                 <span className="font-bold text-white">{selectedChord} :</span>{' '}
                 {chordsDetail[selectedChord].explanation}

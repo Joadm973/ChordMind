@@ -2,10 +2,10 @@ export default function ChordCard({ name, detail, active, onClick }) {
   return (
     <button
       onClick={() => onClick(name)}
-      className={`text-left p-3 rounded-xl border transition-all ${
+      className={`text-left p-3 rounded-xl border shadow-lg shadow-black/10 transition-all active:scale-[0.98] ${
         active
-          ? 'border-indigo-500 bg-indigo-900/40'
-          : 'border-slate-700 bg-slate-800 hover:border-slate-500'
+          ? 'border-indigo-500/60 bg-indigo-950/40'
+          : 'border-white/5 bg-slate-900/50 hover:border-white/15'
       }`}
     >
       <div className="font-bold text-white text-base">{name}</div>
